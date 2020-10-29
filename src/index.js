@@ -1,18 +1,61 @@
-// Test import of a JavaScript function
-import {example} from './js/example'
+import './css/main.css';
+import countriesApi from './js/fetchCountries';
+import countryTpl from './templates/markupCountry.hbs';
+import listContriesTpl from './templates/markupListContries.hbs';
 
-// Test import of an asset
-import webpackLogo from './images/webpack-logo.svg'
+import { info, error } from '@pnotify/core/dist/PNotify.js';
+import '@pnotify/core/dist/PNotify.css';
+import '@pnotify/core/dist/BrightTheme.css';
 
-// Test import of styles
-import './styles/index.scss'
+const debounce = require('lodash.debounce');
+let searchedCountry = '';
 
-// Appending to the DOM
-const logo = document.createElement('img')
-logo.src = webpackLogo
+const refs = {
+  input: document.querySelector('.js-search-input'),
+  countriesContainer: document.querySelector('.js-countries-container'),
+};
 
-const heading = document.createElement('h1')
-heading.textContent = example()
+refs.input.addEventListener(
+  'input',
+  debounce(() => {
+    onSearch();
+  }, 500),
+);
 
-const app = document.querySelector('#root')
-app.append(logo, heading)
+function onSearch() {
+  clearSearch();
+  searchedCountry = refs.input.value;
+  countriesApi(searchedCountry).then(markupResult);
+}
+
+function clearSearch() {
+  refs.countriesContainer.innerHTML = '';
+}
+
+function markupResult(countries) {
+  if (countries.length > 10) {
+    error({
+      text: 'To many matches found. Please enter a more specific query!',
+    });
+    return;
+  }
+  if (countries.length === 1) {
+    clearSearch();
+    refs.countriesContainer.insertAdjacentHTML(
+      'beforeend',
+      countryTpl(countries),
+    );
+    return;
+  }
+  if (countries.length <= 10 && countries.length > 1) {
+    clearSearch();
+    refs.countriesContainer.insertAdjacentHTML(
+      'beforeend',
+      listContriesTpl(countries),
+    );
+    return;
+  } 
+  info({
+    text: 'No matches found!',
+  });
+}
