@@ -15,12 +15,7 @@ const refs = {
   countriesContainer: document.querySelector('.js-countries-container'),
 };
 
-refs.input.addEventListener(
-  'input',
-  debounce(() => {
-    onSearch();
-  }, 500),
-);
+refs.input.addEventListener('input', debounce(onSearch, 500));
 
 function onSearch() {
   clearSearch();
@@ -33,29 +28,34 @@ function clearSearch() {
 }
 
 function markupResult(countries) {
-  if (countries.length > 10) {
-    error({
-      text: 'To many matches found. Please enter a more specific query!',
-    });
-    return;
-  }
   if (countries.length === 1) {
     clearSearch();
-    refs.countriesContainer.insertAdjacentHTML(
-      'beforeend',
-      countryTpl(countries),
+    markupContries(countryTpl, countries);
+    return;
+  }
+  if (countries.length > 1 && countries.length <= 10) {
+    clearSearch();
+    markupContries(listContriesTpl, countries);
+    return;
+  } 
+  if (countries.length > 10) {
+    outputInfo(
+      error,
+      'To many matches found. Please enter a more specific query!',
     );
     return;
   }
-  if (countries.length <= 10 && countries.length > 1) {
-    clearSearch();
-    refs.countriesContainer.insertAdjacentHTML(
-      'beforeend',
-      listContriesTpl(countries),
-    );
-    return;
-  } 
-  info({
-    text: 'No matches found!',
+  outputInfo(info, 'No matches found!');
+}
+
+function outputInfo(typeInfo, text) {
+  typeInfo({
+    text: `${text}`,
+    delay: 1400,
+    closerHover: true,
   });
+}
+
+function markupContries(tpl, countries) {
+  refs.countriesContainer.insertAdjacentHTML('beforeend', tpl(countries));
 }
