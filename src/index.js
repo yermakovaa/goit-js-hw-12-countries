@@ -3,7 +3,7 @@ import countriesApi from './js/fetchCountries';
 import countryTpl from './templates/markupCountry.hbs';
 import listContriesTpl from './templates/markupListContries.hbs';
 
-import { info, error } from '@pnotify/core/dist/PNotify.js';
+import { info, error } from '@pnotify/core';
 import '@pnotify/core/dist/PNotify.css';
 import '@pnotify/core/dist/BrightTheme.css';
 
@@ -20,7 +20,9 @@ refs.input.addEventListener('input', debounce(onSearch, 500));
 function onSearch() {
   clearSearch();
   searchedCountry = refs.input.value;
-  countriesApi(searchedCountry).then(markupResult);
+  countriesApi(searchedCountry)
+    .then(markupResult)
+    .catch(err => console.log(err));
 }
 
 function clearSearch() {
@@ -31,21 +33,17 @@ function markupResult(countries) {
   if (countries.length === 1) {
     clearSearch();
     markupContries(countryTpl, countries);
-    return;
-  }
-  if (countries.length > 1 && countries.length <= 10) {
+  } else if (countries.length > 1 && countries.length <= 10) {
     clearSearch();
     markupContries(listContriesTpl, countries);
-    return;
-  } 
-  if (countries.length > 10) {
+  } else if (countries.length > 10) {
     outputInfo(
       error,
       'To many matches found. Please enter a more specific query!',
     );
-    return;
+  } else {
+    outputInfo(info, 'No matches found!');
   }
-  outputInfo(info, 'No matches found!');
 }
 
 function outputInfo(typeInfo, text) {
